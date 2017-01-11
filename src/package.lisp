@@ -4,4 +4,5 @@
            #:enqueue
            #:fetch-json-status
            #:make-queue
-           #:print-status))
+           #:print-status
+           #:reset))

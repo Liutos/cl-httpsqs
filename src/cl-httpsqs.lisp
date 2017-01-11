@@ -41,11 +41,12 @@
 
 ;; export
 
-(defun dequeue (name queue)
+(defun dequeue (name queue &optional (charset "utf-8"))
   "Returns a string dequeued from a httpsqs queue, or NIL when the queue is empty."
   (check-type name string)
   (check-type queue <httpsqs-queue>)
-  (let ((parameters `(("name" . ,name)
+  (let ((parameters `(("charset" . ,charset)
+                      ("name" . ,name)
                       ("opt" . "get"))))
     (multiple-value-bind (content code headers)
         (http-request :get parameters queue)
@@ -55,12 +56,13 @@
           nil
           content))))
 
-(defun enqueue (data name queue)
+(defun enqueue (data name queue &optional (charset "utf-8"))
   "Append DATA into QUEUE named NAME."
   (check-type data string)
   (check-type name string)
   (check-type queue <httpsqs-queue>)
-  (let ((parameters `(("name" . ,name)
+  (let ((parameters `(("charset" . ,charset)
+                      ("name" . ,name)
                       ("opt" . "put"))))
     (http-request :post parameters queue data)))
 
@@ -86,3 +88,11 @@
                       ("opt" . "status"))))
     (let ((status (http-request :get parameters queue)))
       (print status))))
+
+(defun reset (name queue)
+  "Reset the QUEUE"
+  (check-type name string)
+  (check-type queue <httpsqs-queue>)
+  (let ((parameters `(("name" . ,name)
+                      ("opt" . "reset"))))
+    (http-request :get parameters queue)))
