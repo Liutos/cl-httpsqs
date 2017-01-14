@@ -96,6 +96,16 @@
                       ("opt" . "reset"))))
     (http-request :get parameters queue)))
 
+(defun set-max (name num queue)
+  "Set the max number of elements in QUEUE."
+  (check-type num integer)
+  (check-type name string)
+  (check-type queue <httpsqs-queue>)
+  (let ((parameters `(("name" . ,name)
+                      ("num" . ,(format nil "~A" num))
+                      ("opt" . "maxqueue"))))
+    (http-request :get parameters queue)))
+
 (defun view (name pos queue)
   "View the element at POS in QUEUE."
   (check-type name string)

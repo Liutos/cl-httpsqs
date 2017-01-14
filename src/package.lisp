@@ -6,4 +6,5 @@
            #:make-queue
            #:print-status
            #:reset
+           #:set-max
            #:view))
