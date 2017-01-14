@@ -106,6 +106,16 @@
                       ("opt" . "maxqueue"))))
     (http-request :get parameters queue)))
 
+(defun set-sync-time (name queue seconds)
+  "Set interval in seconds for auto flush of QUEUE."
+  (check-type name string)
+  (check-type queue <httpsqs-queue>)
+  (check-type seconds integer)
+  (let ((parameters `(("name" . ,name)
+                      ("num" . ,(format nil "~A" seconds))
+                      ("opt" . "maxqueue"))))
+    (http-request :get parameters queue)))
+
 (defun view (name pos queue)
   "View the element at POS in QUEUE."
   (check-type name string)

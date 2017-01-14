@@ -7,4 +7,5 @@
            #:print-status
            #:reset
            #:set-max
+           #:set-sync-time
            #:view))
