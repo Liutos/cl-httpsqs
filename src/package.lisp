@@ -5,4 +5,5 @@
            #:fetch-json-status
            #:make-queue
            #:print-status
-           #:reset))
+           #:reset
+           #:view))

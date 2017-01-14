@@ -16,8 +16,7 @@
 
 (defun http-request (method parameters queue &optional content)
   "Send HTTP request to QUEUE with CONTENT and PARAMETERS."
-  (when content
-    (check-type content string))
+  (check-type content (or string null))
   (check-type method keyword)
   (check-type parameters list)
   (check-type queue <httpsqs-queue>)
@@ -95,4 +94,14 @@
   (check-type queue <httpsqs-queue>)
   (let ((parameters `(("name" . ,name)
                       ("opt" . "reset"))))
+    (http-request :get parameters queue)))
+
+(defun view (name pos queue)
+  "View the element at POS in QUEUE."
+  (check-type name string)
+  (check-type pos integer)
+  (check-type queue <httpsqs-queue>)
+  (let ((parameters `(("name" . ,name)
+                      ("opt" . "view")
+                      ("pos" . ,(format nil "~A" pos)))))
     (http-request :get parameters queue)))
