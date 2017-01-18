@@ -14,7 +14,7 @@
     :reader queue-port
     :type integer)))
 
-(defun http-request (method parameters queue &optional content)
+(defun http-request (method name parameters queue &optional content)
   "Send HTTP request to QUEUE with CONTENT and PARAMETERS."
   (check-type content (or string null))
   (check-type method keyword)
@@ -24,6 +24,7 @@
         (uri (make-queue-uri queue)))
     (when auth
       (push `("auth" . ,auth) parameters))
+    (push `("name" . ,name) parameters)
     (let ((args (list :external-format-in :utf-8
                       :method method
                       :parameters parameters)))
@@ -61,17 +62,15 @@
   (check-type name string)
   (check-type queue <httpsqs-queue>)
   (let ((parameters `(("charset" . ,charset)
-                      ("name" . ,name)
                       ("opt" . "put"))))
-    (http-request :post parameters queue data)))
+    (http-request :post name parameters queue data)))
 
 (defun fetch-json-status (name queue)
   "Returns a JSON string of the QUEUE's status."
   (check-type name string)
   (check-type queue <httpsqs-queue>)
-  (let ((parameters `(("name" . ,name)
-                      ("opt" . "status_json"))))
-    (http-request :get parameters queue)))
+  (let ((parameters `(("opt" . "status_json"))))
+    (http-request :get name parameters queue)))
 
 (defun make-queue (host port &optional auth)
   (make-instance '<httpsqs-queue>
@@ -83,45 +82,40 @@
   "Display the current status of QUEUE."
   (check-type name string)
   (check-type queue <httpsqs-queue>)
-  (let ((parameters `(("name" . ,name)
-                      ("opt" . "status"))))
-    (let ((status (http-request :get parameters queue)))
+  (let ((parameters `(("opt" . "status"))))
+    (let ((status (http-request :get name parameters queue)))
       (print status))))
 
 (defun reset (name queue)
   "Reset the QUEUE"
   (check-type name string)
   (check-type queue <httpsqs-queue>)
-  (let ((parameters `(("name" . ,name)
-                      ("opt" . "reset"))))
-    (http-request :get parameters queue)))
+  (let ((parameters `(("opt" . "reset"))))
+    (http-request :get name parameters queue)))
 
 (defun set-max (name num queue)
   "Set the max number of elements in QUEUE."
   (check-type num integer)
   (check-type name string)
   (check-type queue <httpsqs-queue>)
-  (let ((parameters `(("name" . ,name)
-                      ("num" . ,(format nil "~A" num))
+  (let ((parameters `(("num" . ,(format nil "~A" num))
                       ("opt" . "maxqueue"))))
-    (http-request :get parameters queue)))
+    (http-request :get name parameters queue)))
 
 (defun set-sync-time (name queue seconds)
   "Set interval in seconds for auto flush of QUEUE."
   (check-type name string)
   (check-type queue <httpsqs-queue>)
   (check-type seconds integer)
-  (let ((parameters `(("name" . ,name)
-                      ("num" . ,(format nil "~A" seconds))
+  (let ((parameters `(("num" . ,(format nil "~A" seconds))
                       ("opt" . "maxqueue"))))
-    (http-request :get parameters queue)))
+    (http-request :get name parameters queue)))
 
 (defun view (name pos queue)
   "View the element at POS in QUEUE."
   (check-type name string)
   (check-type pos integer)
   (check-type queue <httpsqs-queue>)
-  (let ((parameters `(("name" . ,name)
-                      ("opt" . "view")
+  (let ((parameters `(("opt" . "view")
                       ("pos" . ,(format nil "~A" pos)))))
-    (http-request :get parameters queue)))
+    (http-request :get name parameters queue)))
