@@ -17,6 +17,12 @@
 (define-condition httpsqs-error (error)
   ())
 
+(define-condition httpsqs-auth-failed (httpsqs-error)
+  ()
+  (:report (lambda (c stream)
+             (declare (ignorable c))
+             (format stream "Invalid authentication"))))
+
 (define-condition httpsqs-enqueue-error (httpsqs-error)
   ()
   (:report (lambda (c stream)
@@ -48,6 +54,8 @@
         (push :content args))
       (let* ((values (multiple-value-list (apply #'drakma:http-request uri args)))
              (response (first values)))
+        (when (string= response "HTTPSQS_AUTH_FAILED")
+          (error 'httpsqs-auth-failed))
         (when (string= response "HTTPSQS_ERROR")
           (error 'httpsqs-error))
         (apply #'values values)))))
