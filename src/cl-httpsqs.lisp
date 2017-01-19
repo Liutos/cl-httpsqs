@@ -14,6 +14,21 @@
     :reader queue-port
     :type integer)))
 
+(define-condition httpsqs-error (error)
+  ())
+
+(define-condition httpsqs-enqueue-error (httpsqs-error)
+  ()
+  (:report (lambda (c stream)
+             (declare (ignorable c))
+             (format stream "An error occured when enqueueing"))))
+
+(define-condition httpsqs-reset-error (httpsqs-error)
+  ()
+  (:report (lambda (c stream)
+             (declare (ignorable c))
+             (format stream "An error occured when reseting"))))
+
 (defun http-request (method name parameters queue &optional content)
   "Send HTTP request to QUEUE with CONTENT and PARAMETERS."
   (check-type content (or string null))
@@ -31,7 +46,11 @@
       (when (and (eq method :post) content)
         (push content args)
         (push :content args))
-      (apply #'drakma:http-request uri args))))
+      (let* ((values (multiple-value-list (apply #'drakma:http-request uri args)))
+             (response (first values)))
+        (when (string= response "HTTPSQS_ERROR")
+          (error 'httpsqs-error))
+        (apply #'values values)))))
 
 (defun make-queue-uri (queue)
   (check-type queue <httpsqs>)
@@ -46,10 +65,9 @@
   (check-type name string)
   (check-type queue <httpsqs>)
   (let ((parameters `(("charset" . ,charset)
-                      ("name" . ,name)
                       ("opt" . "get"))))
     (multiple-value-bind (content code headers)
-        (http-request :get parameters queue)
+        (http-request :get name parameters queue)
       (declare (ignorable code))
       (if (and (string= content "HTTPSQS_GET_END")
                (null (assoc :pos headers)))
@@ -63,7 +81,10 @@
   (check-type queue <httpsqs>)
   (let ((parameters `(("charset" . ,charset)
                       ("opt" . "put"))))
-    (http-request :post name parameters queue data)))
+    (let ((response (http-request :post name parameters queue data)))
+      (when (string= response "HTTPSQS_PUT_ERROR")
+        (error 'httpsqs-enqueue-error))
+      response)))
 
 (defun fetch-json-status (name queue)
   "Returns a JSON string of the QUEUE's status."
@@ -91,7 +112,10 @@
   (check-type name string)
   (check-type queue <httpsqs>)
   (let ((parameters `(("opt" . "reset"))))
-    (http-request :get name parameters queue)))
+    (let ((response (http-request :get name parameters queue)))
+      (when (string= response "HTTPSQS_RESET_ERROR")
+        (error 'httpsqs-reset-error))
+      response)))
 
 (defun set-max (name num queue)
   "Set the max number of elements in QUEUE."
