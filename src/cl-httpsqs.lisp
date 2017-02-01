@@ -116,7 +116,7 @@
       (print status))))
 
 (defun reset (name queue)
-  "Reset the QUEUE"
+  "Reset the QUEUE."
   (check-type name string)
   (check-type queue <httpsqs>)
   (let ((parameters `(("opt" . "reset"))))
