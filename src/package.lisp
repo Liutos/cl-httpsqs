@@ -1,3 +1,5 @@
+(in-package #:cl-user)
+
 (defpackage #:cl-httpsqs
   (:use #:cl)
   (:export #:dequeue
